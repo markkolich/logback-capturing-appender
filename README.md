@@ -2,7 +2,7 @@
 
 This repo contains code that demonstrates how to capture [Logback](http://logback.qos.ch/) logging output for unit tests.
 
-Sometimes, you need to verify that a class passes unit tests **and** logs the right message at the correct logging level.
+Sometimes, unit testing involves verifying that code logs the right message at the correct logging level.
 
 Unsurprisingly, this is easily achievable with a custom [Logback appender](http://logback.qos.ch/manual/appenders.html) in your unit tests.
 
@@ -14,7 +14,12 @@ Corresponding unit tests in [CodeWithFancyLoggingTest.java](https://github.com/m
 
 ## Running
 
-It's all Maven.
+Clone the repo.
+
+```
+git clone https://github.com/markkolich/logback-capturing-appender.git
+cd logback-capturing-appender
+```
 
 From your favorite command line, invoke:
 
