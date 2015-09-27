@@ -108,10 +108,7 @@ public final class LogbackCapturingAppender extends AppenderBase<ILoggingEvent> 
      * Will return null if no logging events have been captured.
      */
     public Level getFirstLevel() {
-        if (!events_.isEmpty()) {
-            return events_.stream().findFirst().get().getLevel();
-        }
-        return null;
+        return Iterables.getFirst(getLevels(), null);
     }
 
     @Override
