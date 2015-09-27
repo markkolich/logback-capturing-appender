@@ -30,9 +30,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A class which demonstrates how to inject yourself into a {@link Logger} used by a specific
@@ -44,7 +46,7 @@ public final class LogbackCapturingAppender extends AppenderBase<ILoggingEvent> 
 
     public static final class Factory {
 
-        private static final List<LogbackCapturingAppender> ALL = new ArrayList<>();
+        private static final List<LogbackCapturingAppender> ALL = Lists.newLinkedList();
 
         public static LogbackCapturingAppender attach(final org.slf4j.Logger slf4jLogger) {
             final LogbackCapturingAppender appender = new LogbackCapturingAppender(slf4jLogger);
@@ -59,29 +61,67 @@ public final class LogbackCapturingAppender extends AppenderBase<ILoggingEvent> 
     }
 
     private final Logger logger_;
-    private ILoggingEvent captured_;
+    private final List<ILoggingEvent> events_;
 
     private LogbackCapturingAppender(final org.slf4j.Logger slf4jLogger) {
         logger_ = (Logger) slf4jLogger;
         logger_.setLevel(Level.ALL);
         logger_.addAppender(this);
+        events_ = Lists.newLinkedList();
         start();
     }
 
-    public String getCapturedLogMessage() {
-        return (captured_ == null) ? null : captured_.getMessage();
+    /**
+     * Returns the {@link List} of all captured logging messages since this appender was
+     * attached to the logger.  Note the returned list is not immutable, although the caller
+     * shouldn't be doing anything stupid with it (like modifying it, in flight).
+     *
+     * Will return an empty {@link List} if no logging events have been captured.
+     */
+    public List<String> getMessages() {
+        return events_.stream().map(ILoggingEvent::getMessage).collect(Collectors.toList());
     }
-    public Level getCapturedLogLevel() {
-        return (captured_ == null) ? null : captured_.getLevel();
+
+    /**
+     * Returns the first logger event message in the {@link List} of captured logging messages.
+     *
+     * Will return null if no logging events have been captured.
+     */
+    public String getFirstMessage() {
+        return Iterables.getFirst(getMessages(), null);
+    }
+
+    /**
+     * Returns the {@link List} of all captured logging levels since this appender was
+     * attached to the logger.  Note the returned list is not immutable, although the caller
+     * shouldn't be doing anything stupid with it (like modifying it, in flight).
+     *
+     * Will return an empty {@link List} if no logging events have been captured.
+     */
+    public List<Level> getLevels() {
+        return events_.stream().map(ILoggingEvent::getLevel).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the first logger event level in the {@link List} of captured logging messages.
+     *
+     * Will return null if no logging events have been captured.
+     */
+    public Level getFirstLevel() {
+        if (!events_.isEmpty()) {
+            return events_.stream().findFirst().get().getLevel();
+        }
+        return null;
     }
 
     @Override
     protected void append(final ILoggingEvent event) {
-        captured_ = event;
+        events_.add(event);
     }
 
     private void detach() {
         logger_.detachAppender(this);
+        events_.clear();
     }
 
 }
